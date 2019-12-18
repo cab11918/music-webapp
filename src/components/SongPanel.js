@@ -14,6 +14,12 @@ import SkipNextIcon from '@material-ui/icons/SkipNext';
 import PauseIcon from '@material-ui/icons/Pause';
 import MusicService from "../services/MusicService";
 import Slider from "@material-ui/core/Slider";
+import VolumeDownIcon from '@material-ui/icons/VolumeDown';
+import PlaylistPlayIcon from '@material-ui/icons/PlaylistPlay';
+import ShuffleIcon from '@material-ui/icons/Shuffle';
+import LoopIcon from '@material-ui/icons/Loop';
+import FormControlLabel from "@material-ui/core/FormControlLabel";
+import Checkbox from "@material-ui/core/Checkbox";
 
 const service = MusicService.getInstance()
 
@@ -52,22 +58,28 @@ const useStyles = theme => ({
     height: 30,
     width: 30,
   },
-  slider: {
-
+  pSlider: {
     marginLeft: 'auto',
     marginRight: 'auto'
+  },
+  vSlider: {
+    width: '50%',
+    marginLeft: 10,
+  },
+  scIcon: {
+    height: 16,
+    width: 16,
+  },
+  playSecControlFix: {
+    marginLeft: theme.spacing(1)
   }
 
 });
 
 function format(time) {
-  // Hours, minutes and seconds
-  var mins = ~~((time % 3600) / 60);
-  var secs = ~~time % 60;
-
-  // Output like "1:01" or "4:03:59" or "123:03:59"
-  var ret = "";
-
+  let mins = ~~((time % 3600) / 60);
+  let secs = ~~time % 60;
+  let ret = "";
   ret += "" + mins + ":" + (secs < 10 ? "0" : "");
   ret += "" + secs;
   return ret;
@@ -85,43 +97,87 @@ class SongPanel extends React.Component {
       play: false,
       duration: "--:--",
       currentTime: "0:00",
-      slider: 0
+      pSlider: 0,
+      curSongIndex: 0
     }
 
   }
 
   componentDidMount() {
-    this.currentTimeInterval = null;
-    service.getASongUrl(this.props.musicId).then(data => {
-      this.audio = new Audio(data.data[0].url)
+    this.initializeSong()
+  }
 
-    })
+  initializeSong() {
 
-    service.getASongDetail(this.props.musicId).then(detail => {
-      this.setState({
-        name: detail.songs[0].name,
-        author: detail.songs[0].ar[0].name,
-        albumPicUrl: detail.songs[0].al.picUrl,
+    service.getASongUrl(this.props.songs[this.state.curSongIndex]).then(
+        data => {
+          this.audio = new Audio(data.data[0].url)
+          this.audio.load()
 
-      })
-      this.audio.onloadedmetadata = function () {
-        this.setState({duration: format(this.audio.duration)})
+        })
 
-      }.bind(this)
-      this.audio.onplay = () => {
-        setInterval(() => {
-          this.setState({
-            slider: (this.audio.currentTime / this.audio.duration) * 100,
-            currentTime: format(this.audio.currentTime)
-          })
-        }, 500)
-      }
-      this.audio.onended = () => {
-        this.setState({play:false})
-      }
+    service.getASongDetail(this.props.songs[this.state.curSongIndex]).then(
+        detail => {
 
-    })
+          this.audio.onloadedmetadata = function () {
+            this.setState({
+              name: detail.songs[0].name,
+              author: detail.songs[0].ar[0].name,
+              albumPicUrl: detail.songs[0].al.picUrl,
+              duration: format(this.audio.duration)
+            })
+          }.bind(this)
 
+          this.audio.onplay = () => {
+            setInterval(() => {
+              this.setState({
+                pSlider: (this.audio.currentTime / this.audio.duration) * 100,
+                currentTime: format(this.audio.currentTime)
+              })
+            }, 500)
+          }
+
+          this.audio.onended = () => {
+
+            if (this.state.curSongIndex === this.props.songs.length - 1) {
+              this.setState({curSongIndex: 0})
+              this.setCurSong()
+            } else {
+              this.setState({curSongIndex: this.state.curSongIndex += 1})
+
+              this.setCurSong()
+
+            }
+            console.log(this.state.curSongIndex)
+
+          }
+
+        })
+
+  }
+
+  setCurSong() {
+    service.getASongDetail(this.props.songs[this.state.curSongIndex]).then(
+        detail => {
+
+          this.audio.onloadedmetadata = function () {
+            this.setState({
+              name: detail.songs[0].name,
+              author: detail.songs[0].ar[0].name,
+              albumPicUrl: detail.songs[0].al.picUrl,
+              duration: format(this.audio.duration)
+            })
+          }.bind(this)
+
+        })
+
+    service.getASongUrl(this.props.songs[this.state.curSongIndex]).then(
+        data => {
+          this.audio.pause();
+          this.audio.src = data.data[0].url
+          this.audio.load();
+          this.audio.play();
+        })
   }
 
   pause() {
@@ -136,7 +192,24 @@ class SongPanel extends React.Component {
   }
 
   seek(value) {
-    this.audio.currentTime =this.audio.duration * (value/100)
+    this.audio.currentTime = Math.floor(this.audio.duration * (value / 100))
+  }
+
+  next() {
+
+    if (this.state.curSongIndex === this.props.songs.length - 1) {
+      this.setState({
+        cusSongIndex: this.state.curSongIndex += -this.props.songs.length + 1
+      })
+      this.setCurSong()
+
+    } else {
+      this.setState({curSongIndex: this.state.curSongIndex += 1})
+
+      this.setCurSong()
+
+    }
+
   }
 
   render() {
@@ -174,10 +247,10 @@ class SongPanel extends React.Component {
 
                     <Grid direction={'row'}>
 
-                      <Slider value={this.state.slider}
+                      <Slider value={this.state.pSlider}
                               aria-labelledby="continuous-slider"
-                              className={classes.slider}
-                              onChange={(event,value) => this.seek(value)}/>
+                              className={classes.pSlider}
+                              onChange={(event, value) => this.seek(value)}/>
                       <Typography>
                         {this.state.currentTime}/{this.state.duration}
                       </Typography>
@@ -198,14 +271,62 @@ class SongPanel extends React.Component {
                           <PlayArrowIcon className={classes.playIcon}/>}
                     </IconButton>
                     <IconButton aria-label="next">
-                      <SkipNextIcon className={classes.playIcon}/>
+                      <SkipNextIcon className={classes.playIcon}
+                                    onClick={() => this.next()}/>
                     </IconButton>
                   </div>
+
                 </div>
                 <CardMedia
                     className={classes.cover}
                     image={this.state.albumPicUrl}
                 />
+
+              </Grid>
+
+
+              <Grid
+                  container
+                  direction="row"
+                  justify="flex-start"
+                  alignItems="flex-start"
+              >
+                <Grid item xs={9}>
+                  <div className={classes.playSecControlFix}>
+                    <Checkbox checked={true}
+                              icon={<PlaylistPlayIcon
+                                  className={classes.scIcon}/>}
+                              checkedIcon={<PlaylistPlayIcon
+                                  className={classes.scIcon}/>}
+                              value="checkedH"/>
+                    <Checkbox icon={<ShuffleIcon className={classes.scIcon}/>}
+                              checkedIcon={<ShuffleIcon
+                                  className={classes.scIcon}/>}
+                              value="checkedH"/>
+                    <Checkbox icon={<LoopIcon className={classes.scIcon}/>}
+                              checkedIcon={<LoopIcon
+                                  className={classes.scIcon}/>}
+                              value="checkedH"/>
+                  </div>
+                </Grid>
+
+                <Grid
+                    container
+                    direction="row"
+                    justify="flex-start"
+                    alignItems="center"
+                    xs={3}
+                >
+                  <IconButton aria-label="next" aria-disabled>
+
+                    <VolumeDownIcon className={classes.scIcon}/>
+                  </IconButton>
+                  <Slider
+                      aria-labelledby="continuous-slider"
+                      className={classes.vSlider}
+                  />
+                </Grid>
+
 
               </Grid>
 

@@ -24,7 +24,7 @@ class MainPage extends React.Component {
   constructor(props) {
 
     super(props);
-    this.state = {}
+    this.state = {songs: [35476044,1409137437,1386055783, 113115,123456]}
 
   }
 
@@ -38,8 +38,8 @@ class MainPage extends React.Component {
 
         <div className={classes.root}>
 
-          <Grid xs={12} sm={8} md={6} lg={4}>
-            <SongPanel musicId={113120}/>
+          <Grid xs={6}>
+            <SongPanel songs={this.state.songs}/>
           </Grid>
 
 
