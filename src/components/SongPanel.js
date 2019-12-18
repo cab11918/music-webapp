@@ -18,7 +18,9 @@ import VolumeDownIcon from '@material-ui/icons/VolumeDown';
 import PlaylistPlayIcon from '@material-ui/icons/PlaylistPlay';
 import ShuffleIcon from '@material-ui/icons/Shuffle';
 import LoopIcon from '@material-ui/icons/Loop';
+import VolumeOffIcon from '@material-ui/icons/VolumeOff';
 import FormControlLabel from "@material-ui/core/FormControlLabel";
+
 import Checkbox from "@material-ui/core/Checkbox";
 
 const service = MusicService.getInstance()
@@ -98,7 +100,9 @@ class SongPanel extends React.Component {
       duration: "--:--",
       currentTime: "0:00",
       pSlider: 0,
-      curSongIndex: 0
+      curSongIndex: 0,
+      playMode: 0,
+      volume: 100
     }
 
   }
@@ -139,21 +143,42 @@ class SongPanel extends React.Component {
 
           this.audio.onended = () => {
 
-            if (this.state.curSongIndex === this.props.songs.length - 1) {
-              this.setState({curSongIndex: 0})
-              this.setCurSong()
-            } else {
-              this.setState({curSongIndex: this.state.curSongIndex += 1})
+            switch (this.state.playMode) {
+              case 0:
+                if (this.state.curSongIndex === this.props.songs.length - 1) {
+                  this.setState({curSongIndex: 0})
+                  this.setCurSong()
+                } else {
+                  this.setState({curSongIndex: this.state.curSongIndex += 1})
 
-              this.setCurSong()
+                  this.setCurSong()
 
+                }
+                break;
+              case 1:
+                let shuffleIndex = this.getRandomSong()
+                while (shuffleIndex === this.state.curSongIndex) {
+                  shuffleIndex = this.getRandomSong()
+                }
+
+                this.setState({curSongIndex: shuffleIndex})
+
+                this.setCurSong()
+
+                break;
+              case 2:
+                this.audio.play()
+                break;
             }
-            console.log(this.state.curSongIndex)
 
           }
 
         })
 
+  }
+
+  getRandomSong() {
+    return Math.floor(Math.random() * Math.floor(this.props.songs.length))
   }
 
   setCurSong() {
@@ -197,19 +222,83 @@ class SongPanel extends React.Component {
 
   next() {
 
-    if (this.state.curSongIndex === this.props.songs.length - 1) {
-      this.setState({
-        cusSongIndex: this.state.curSongIndex += -this.props.songs.length + 1
-      })
-      this.setCurSong()
+    switch (this.state.playMode) {
+      case 0:
+        if (this.state.curSongIndex === this.props.songs.length - 1) {
+          this.setState({curSongIndex: 0})
+          this.setCurSong()
+        } else {
+          this.setState(
+              {curSongIndex: this.state.curSongIndex += 1, play: true})
 
-    } else {
-      this.setState({curSongIndex: this.state.curSongIndex += 1})
+          this.setCurSong()
 
-      this.setCurSong()
+        }
+        break;
+      case 1:
+        let shuffleIndex = this.getRandomSong()
+        while (shuffleIndex === this.state.curSongIndex) {
+          shuffleIndex = this.getRandomSong()
+        }
 
+        this.setState({curSongIndex: shuffleIndex, play: true})
+
+        this.setCurSong()
+
+        break;
+      case 2:
+        this.setState({play: true})
+        this.audio.currentTime = 0;
+        this.audio.play();
+        break;
     }
 
+  }
+
+  previous() {
+
+    switch (this.state.playMode) {
+      case 0:
+        if (this.state.curSongIndex === 0) {
+          this.setState({
+            cusSongIndex: this.state.curSongIndex -= -this.props.songs.length
+                + 1,
+            play: true
+          })
+          this.setCurSong()
+
+        } else {
+          this.setState({
+            curSongIndex: this.state.curSongIndex -= 1,
+            play: true
+          })
+
+          this.setCurSong()
+
+        }
+        break;
+      case 1:
+        let shuffleIndex = this.getRandomSong()
+        while (shuffleIndex === this.state.curSongIndex) {
+          shuffleIndex = this.getRandomSong()
+        }
+
+        this.setState({curSongIndex: shuffleIndex, play: true})
+
+        this.setCurSong()
+
+        break;
+      case 2:
+        this.setState({play: true})
+        this.audio.currentTime = 0;
+        this.audio.play();
+        break;
+    }
+  }
+
+  changeVolume(value) {
+    this.setState({volume: value})
+    this.audio.volume = this.state.volume / 100
   }
 
   render() {
@@ -259,7 +348,8 @@ class SongPanel extends React.Component {
 
                   </CardContent>
                   <div className={classes.controls}>
-                    <IconButton aria-label="previous">
+                    <IconButton aria-label="previous"
+                                onClick={() => this.previous()}>
                       <SkipPreviousIcon className={classes.playIcon}/>
                     </IconButton>
                     <IconButton aria-label="play/pause" onClick={() => {
@@ -270,9 +360,9 @@ class SongPanel extends React.Component {
                               className={classes.playIcon}/> :
                           <PlayArrowIcon className={classes.playIcon}/>}
                     </IconButton>
-                    <IconButton aria-label="next">
+                    <IconButton aria-label="next" onClick={() => this.next()}>
                       <SkipNextIcon className={classes.playIcon}
-                                    onClick={() => this.next()}/>
+                      />
                     </IconButton>
                   </div>
 
@@ -293,7 +383,12 @@ class SongPanel extends React.Component {
               >
                 <Grid item xs={9}>
                   <div className={classes.playSecControlFix}>
-                    <Checkbox checked={true}
+                    <Checkbox checked={this.state.playMode === 0 ? true
+                        : false} onChange={() => {
+                      this.setState({
+                        playMode: 0
+                      })
+                    }}
                               icon={<PlaylistPlayIcon
                                   className={classes.scIcon}/>}
                               checkedIcon={<PlaylistPlayIcon
@@ -302,11 +397,22 @@ class SongPanel extends React.Component {
                     <Checkbox icon={<ShuffleIcon className={classes.scIcon}/>}
                               checkedIcon={<ShuffleIcon
                                   className={classes.scIcon}/>}
-                              value="checkedH"/>
+                              checked={this.state.playMode === 1 ? true : false}
+                              onChange={() => {
+                                this.setState(
+                                    {
+                                      playMode: 1
+                                    })
+                              }}/>
                     <Checkbox icon={<LoopIcon className={classes.scIcon}/>}
                               checkedIcon={<LoopIcon
                                   className={classes.scIcon}/>}
-                              value="checkedH"/>
+                              checked={this.state.playMode === 2 ? true : false}
+                              onChange={() => {
+                                this.setState({
+                                  playMode: 2
+                                })
+                              }}/>
                   </div>
                 </Grid>
 
@@ -317,13 +423,26 @@ class SongPanel extends React.Component {
                     alignItems="center"
                     xs={3}
                 >
-                  <IconButton aria-label="next" aria-disabled>
+                  <IconButton aria-label="next" onClick={() => {
+                    if (this.state.volume !== 0) {
+                      this.setState({volume: 0})
+                      this.audio.volume = 0
+                    } else {
+                      this.setState({volume: 100})
+                      this.audio.volume = 1
+                    }
+                  }}>
+                    {this.state.volume === 0 ? <VolumeOffIcon
+                        className={classes.scIcon}/> : <VolumeDownIcon
+                        className={classes.scIcon}/>}
 
-                    <VolumeDownIcon className={classes.scIcon}/>
                   </IconButton>
                   <Slider
+
                       aria-labelledby="continuous-slider"
                       className={classes.vSlider}
+                      value={this.state.volume}
+                      onChange={(event, value) => this.changeVolume(value)}
                   />
                 </Grid>
 
