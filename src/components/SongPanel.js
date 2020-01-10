@@ -22,6 +22,12 @@ import VolumeOffIcon from '@material-ui/icons/VolumeOff';
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 
 import Checkbox from "@material-ui/core/Checkbox";
+import Grow from "@material-ui/core/Grow";
+import Table from "@material-ui/core/Table";
+import TableHead from "@material-ui/core/TableHead";
+import TableRow from "@material-ui/core/TableRow";
+import TableCell from "@material-ui/core/TableCell";
+import TableBody from "@material-ui/core/TableBody";
 
 const service = MusicService.getInstance()
 
@@ -74,6 +80,23 @@ const useStyles = theme => ({
   },
   playSecControlFix: {
     marginLeft: theme.spacing(1)
+  },
+  table: {
+    width: '100%',
+    fontSize: 12
+  },
+  th: {
+    fontSize: 12
+  },
+  tr: {
+    fontSize: 12
+  },
+  img: {
+    width: 12,
+    height: 12,
+    marginRight: 20,
+    borderRadius: 5
+
   }
 
 });
@@ -93,6 +116,7 @@ class SongPanel extends React.Component {
 
     super(props);
     this.state = {
+
       name: '',
       author: '',
       albumPicUrl: '',
@@ -102,7 +126,8 @@ class SongPanel extends React.Component {
       pSlider: 0,
       curSongIndex: 0,
       playMode: 0,
-      volume: 100
+      volume: 100,
+      songUrls: []
     }
 
   }
@@ -175,6 +200,9 @@ class SongPanel extends React.Component {
 
         })
 
+
+
+
   }
 
   getRandomSong() {
@@ -223,7 +251,7 @@ class SongPanel extends React.Component {
   next() {
 
     switch (this.state.playMode) {
-      case 0:
+      case 2:
         if (this.state.curSongIndex === this.props.songs.length - 1) {
           this.setState({curSongIndex: 0})
           this.setCurSong()
@@ -246,10 +274,17 @@ class SongPanel extends React.Component {
         this.setCurSong()
 
         break;
-      case 2:
-        this.setState({play: true})
-        this.audio.currentTime = 0;
-        this.audio.play();
+      case 0:
+        if (this.state.curSongIndex === this.props.songs.length - 1) {
+          this.setState({curSongIndex: 0})
+          this.setCurSong()
+        } else {
+          this.setState(
+              {curSongIndex: this.state.curSongIndex += 1, play: true})
+
+          this.setCurSong()
+
+        }
         break;
     }
 
@@ -258,7 +293,7 @@ class SongPanel extends React.Component {
   previous() {
 
     switch (this.state.playMode) {
-      case 0:
+      case  2:
         if (this.state.curSongIndex === 0) {
           this.setState({
             cusSongIndex: this.state.curSongIndex -= -this.props.songs.length
@@ -288,11 +323,26 @@ class SongPanel extends React.Component {
         this.setCurSong()
 
         break;
-      case 2:
-        this.setState({play: true})
-        this.audio.currentTime = 0;
-        this.audio.play();
+      case  0:
+        if (this.state.curSongIndex === 0) {
+          this.setState({
+            cusSongIndex: this.state.curSongIndex -= -this.props.songs.length
+                + 1,
+            play: true
+          })
+          this.setCurSong()
+
+        } else {
+          this.setState({
+            curSongIndex: this.state.curSongIndex -= 1,
+            play: true
+          })
+
+          this.setCurSong()
+
+        }
         break;
+
     }
   }
 
@@ -314,7 +364,9 @@ class SongPanel extends React.Component {
                 direction="column"
                 justify="flex-start"
                 alignItems="flex-start"
+
             >
+
               <Grid
                   container
                   direction="row"
@@ -423,6 +475,7 @@ class SongPanel extends React.Component {
                     alignItems="center"
                     xs={3}
                 >
+
                   <IconButton aria-label="next" onClick={() => {
                     if (this.state.volume !== 0) {
                       this.setState({volume: 0})
@@ -437,6 +490,7 @@ class SongPanel extends React.Component {
                         className={classes.scIcon}/>}
 
                   </IconButton>
+
                   <Slider
 
                       aria-labelledby="continuous-slider"
@@ -452,9 +506,7 @@ class SongPanel extends React.Component {
 
             </Grid>
 
-
           </Card>
-
 
         </div>
 

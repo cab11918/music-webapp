@@ -5,6 +5,8 @@ import Grid from '@material-ui/core/Grid';
 import withStyles from "@material-ui/core/styles/withStyles";
 import SongPanel from "../components/SongPanel";
 import MusicService from "../services/MusicService"
+import PlaylistPanel from "../components/PlaylistPanel";
+import {Typography} from "@material-ui/core";
 
 const service = MusicService.getInstance()
 const useStyles = theme => ({
@@ -16,6 +18,10 @@ const useStyles = theme => ({
     textAlign: 'center',
     color: theme.palette.text.secondary,
   },
+  title:{
+    paddingBottom:200,
+    paddingTop:20
+  }
 
 });
 
@@ -24,7 +30,7 @@ class MainPage extends React.Component {
   constructor(props) {
 
     super(props);
-    this.state = {songs: [1357785909,30352891,35476044,1409137437,1386055783, 113115,123456]}
+    this.state = {songs: [30352891,35476044,1409137437,1386055783, 113115,123456]}
 
   }
 
@@ -37,11 +43,29 @@ class MainPage extends React.Component {
     return (
 
         <div className={classes.root}>
-
-          <Grid xs={12} lg={4}>
+          <Grid
+              container
+              direction="row"
+              justify="center"
+              alignItems="center"
+          >
+          <Typography variant={'h4'} color={'secondary'} className={classes.title}>Music Player Webapp</Typography>
+          </Grid>
+          <Grid
+              container
+              direction="row"
+              justify="center"
+              alignItems="center"
+          >
+          <Grid xs={12} lg={6}>
             <SongPanel songs={this.state.songs}/>
+
           </Grid>
 
+          {/*<Grid xs={12} lg={7}>*/}
+          {/*<PlaylistPanel songs={this.state.songs}/>*/}
+          {/*</Grid>*/}
+          </Grid>
 
         </div>
 
