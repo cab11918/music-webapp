@@ -19,7 +19,7 @@ const useStyles = theme => ({
     color: theme.palette.text.secondary,
   },
   title:{
-    paddingBottom:200,
+    paddingBottom:'15%',
     paddingTop:20
   }
 
@@ -49,8 +49,7 @@ class MainPage extends React.Component {
               justify="center"
               alignItems="center"
           >
-          <Typography variant={'h4'} color={'secondary'} className={classes.title}>Music Player Webapp</Typography>
-          </Grid>
+<div className={classes.title}></div>          </Grid>
           <Grid
               container
               direction="row"
