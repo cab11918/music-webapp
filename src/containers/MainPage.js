@@ -30,7 +30,7 @@ class MainPage extends React.Component {
   constructor(props) {
 
     super(props);
-    this.state = {songs: [30352891,35476044,1409137437,1386055783, 113115,123456]}
+    this.state = {songs: [27491508,30352891,35476044,1409137437,1386055783, 113115,123456]}
 
   }
 
