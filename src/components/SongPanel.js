@@ -148,14 +148,20 @@ class SongPanel extends React.Component {
     service.getASongDetail(this.props.songs[this.state.curSongIndex]).then(
         detail => {
 
-          this.audio.onloadedmetadata = function () {
-            this.setState({
-              name: detail.songs[0].name,
-              author: detail.songs[0].ar[0].name,
-              albumPicUrl: detail.songs[0].al.picUrl,
-              duration: format(this.audio.duration)
-            })
-          }.bind(this)
+          try {
+            this.audio.onloadedmetadata = function () {
+              this.setState({
+                name: detail.songs[0].name,
+                author: detail.songs[0].ar[0].name,
+                albumPicUrl: detail.songs[0].al.picUrl,
+                duration: format(this.audio.duration)
+              })
+
+            }.bind(this)
+          } catch (err) {
+            window.location.reload(false);
+
+          }
 
           this.audio.onplay = () => {
             setInterval(() => {
@@ -199,9 +205,6 @@ class SongPanel extends React.Component {
           }
 
         })
-
-
-
 
   }
 
