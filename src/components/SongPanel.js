@@ -4,40 +4,37 @@ import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
 import withStyles from "@material-ui/core/styles/withStyles";
 import Typography from "@material-ui/core/Typography";
-import Card from "@material-ui/core/Card";
-import CardContent from "@material-ui/core/CardContent";
 import IconButton from "@material-ui/core/IconButton";
 import CardMedia from "@material-ui/core/CardMedia";
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import SkipPreviousIcon from '@material-ui/icons/SkipPrevious';
 import SkipNextIcon from '@material-ui/icons/SkipNext';
 import PauseIcon from '@material-ui/icons/Pause';
-import MusicService from "../services/MusicService";
 import Slider from "@material-ui/core/Slider";
 import VolumeDownIcon from '@material-ui/icons/VolumeDown';
 import PlaylistPlayIcon from '@material-ui/icons/PlaylistPlay';
 import ShuffleIcon from '@material-ui/icons/Shuffle';
 import LoopIcon from '@material-ui/icons/Loop';
 import VolumeOffIcon from '@material-ui/icons/VolumeOff';
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-
 import Checkbox from "@material-ui/core/Checkbox";
-import Grow from "@material-ui/core/Grow";
-import Table from "@material-ui/core/Table";
-import TableHead from "@material-ui/core/TableHead";
-import TableRow from "@material-ui/core/TableRow";
-import TableCell from "@material-ui/core/TableCell";
-import TableBody from "@material-ui/core/TableBody";
-
-const service = MusicService.getInstance()
+import {bindActionCreators} from "redux";
+import {addSong, setIndex} from "../actions/actions";
+import {connect} from "react-redux";
 
 const useStyles = theme => ({
   root: {
     flexGrow: 1,
+    top: 'auto',
+    bottom: 0,
+    position: 'fixed',
+    width: '100%',
+
   },
   paper: {
+
     padding: theme.spacing(2),
     color: theme.palette.text.secondary,
+    height: '15vh'
   },
   card: {
     display: 'flex',
@@ -51,10 +48,14 @@ const useStyles = theme => ({
     flex: '1 0 auto',
   },
   cover: {
-    width: 210,
-    height: 210,
-    marginLeft: 'auto'
+    width: 100,
+    height: 100,
+    margin: 'auto',
 
+  },
+  pSlider: {
+
+    width: 100
   },
   controls: {
     display: 'flex',
@@ -66,18 +67,12 @@ const useStyles = theme => ({
     height: 30,
     width: 30,
   },
-  pSlider: {
-    marginLeft: 'auto',
-    marginRight: 'auto'
-  },
+
   vSlider: {
-    width: '50%',
-    marginLeft: 10,
+    width: '80%',
+
   },
-  scIcon: {
-    height: 16,
-    width: 16,
-  },
+  scIcon: {},
   playSecControlFix: {
     marginLeft: theme.spacing(1)
   },
@@ -115,6 +110,7 @@ class SongPanel extends React.Component {
   constructor(props) {
 
     super(props);
+
     this.state = {
 
       name: '',
@@ -132,80 +128,98 @@ class SongPanel extends React.Component {
 
   }
 
-  componentDidMount() {
-    this.initializeSong()
+  componentDidUpdate(prevProps, prevState) {
+    if (this.props.songs.length !== prevProps.songs.length
+        && prevProps.songs.length == 0 && this.props.songs.length == 1) {
+      // initializing, only render once
+      this.initializeSong()
+      this.setCurAndPlay()
+
+    } else if (this.props.currentIndex !== prevProps.currentIndex && this.props.songs.length == prevProps.songs.length) {
+      // no song deleted but the currentIndex changed by user
+      console.log(this.props.currentIndex)
+      console.log(this.props.deletedIndex)
+      this.setCurAndPlay()
+
+
+
+    }else if(this.props.songs.length < prevProps.songs.length) {
+      // songs length reduced, deleted 1/x song/songs
+     if(prevProps.currentIndex == this.props.deletedIndex) {
+       this.setCurAndPlay()
+     }
+    }
+    else if (this.props.songs.length == 0) {
+      this.audio.pause()
+    }
+
+  }
+
+  setCurAndPlay() {
+    this.setState(
+        {play: true})
+    try {
+      this.audio.src = this.props.songs[this.props.currentIndex].mp3Url
+
+    } catch (e) {
+      //Uncaught (in promise) DOMException: The play() request was interrupted by a new load request.
+      //Didn't solve
+    }
+    this.setCurSong()
   }
 
   initializeSong() {
 
-    service.getASongUrl(this.props.songs[this.state.curSongIndex]).then(
-        data => {
-          this.audio = new Audio(data.data[0].url)
-          this.audio.load()
+    this.audio = new Audio(this.props.songs[0].mp3Url)
+    this.audio.onloadedmetadata = function () {
+      this.setState({
 
+        duration: format(this.audio.duration)
+      })
+
+    }.bind(this)
+
+    this.audio.onplay = () => {
+      setInterval(() => {
+        this.setState({
+          pSlider: (this.audio.currentTime / this.audio.duration) * 100,
+          currentTime: format(this.audio.currentTime)
         })
+      }, 500)
+    }
 
-    service.getASongDetail(this.props.songs[this.state.curSongIndex]).then(
-        detail => {
+    this.audio.onended = () => {
 
-          try {
-            this.audio.onloadedmetadata = function () {
-              this.setState({
-                name: detail.songs[0].name,
-                author: detail.songs[0].ar[0].name,
-                albumPicUrl: detail.songs[0].al.picUrl,
-                duration: format(this.audio.duration)
-              })
+      switch (this.state.playMode) {
+        case 0:
+          if (this.props.currentIndex == this.props.songs.length - 1) {
+            this.props.setIndex(0)
+            this.audio.src = this.props.songs[0].mp3Url
+            this.setCurSong()
+          } else {
+            this.props.setIndex(this.props.currentIndex + 1)
+            this.audio.src = this.props.songs[this.props.currentIndex].mp3Url
+            this.setCurSong()
 
-            }.bind(this)
-          } catch (err) {
-            window.location.reload(false);
+          }
+          break;
+        case 1:
+          let shuffleIndex = this.getRandomSong()
+          while (shuffleIndex === this.props.currentIndex) {
+            shuffleIndex = this.getRandomSong()
 
           }
 
-          this.audio.onplay = () => {
-            setInterval(() => {
-              this.setState({
-                pSlider: (this.audio.currentTime / this.audio.duration) * 100,
-                currentTime: format(this.audio.currentTime)
-              })
-            }, 500)
-          }
+          this.props.setIndex(shuffleIndex)
+          this.audio.src = this.props.songs[shuffleIndex].mp3Url
+          this.setCurSong()
+          break;
+        case 2:
+          this.audio.play()
+          break;
+      }
 
-          this.audio.onended = () => {
-
-            switch (this.state.playMode) {
-              case 0:
-                if (this.state.curSongIndex === this.props.songs.length - 1) {
-                  this.setState({curSongIndex: 0})
-                  this.setCurSong()
-                } else {
-                  this.setState({curSongIndex: this.state.curSongIndex += 1})
-
-                  this.setCurSong()
-
-                }
-                break;
-              case 1:
-                let shuffleIndex = this.getRandomSong()
-                while (shuffleIndex === this.state.curSongIndex) {
-                  shuffleIndex = this.getRandomSong()
-                }
-
-                this.setState({curSongIndex: shuffleIndex})
-
-                this.setCurSong()
-
-                break;
-              case 2:
-                this.audio.play()
-                break;
-            }
-
-          }
-
-        })
-
+    }
   }
 
   getRandomSong() {
@@ -213,78 +227,64 @@ class SongPanel extends React.Component {
   }
 
   setCurSong() {
-    service.getASongDetail(this.props.songs[this.state.curSongIndex]).then(
-        detail => {
 
-          this.audio.onloadedmetadata = function () {
-            this.setState({
-              name: detail.songs[0].name,
-              author: detail.songs[0].ar[0].name,
-              albumPicUrl: detail.songs[0].al.picUrl,
-              duration: format(this.audio.duration)
-            })
-          }.bind(this)
+    this.audio.onloadedmetadata = function () {
 
-        })
+      this.setState({
+        duration: format(this.audio.duration)
+      })
+    }.bind(this)
 
-    service.getASongUrl(this.props.songs[this.state.curSongIndex]).then(
-        data => {
-          this.audio.pause();
-          this.audio.src = data.data[0].url
-          this.audio.load();
-          this.audio.play();
-        })
-  }
+    this.audio.pause();
+    this.audio.load();
+    this.audio.play();
 
-  pause() {
-    this.setState({play: false})
-    this.audio.pause()
-  }
-
-  play() {
-    this.setState({play: true, duration: format(this.audio.duration)})
-    this.audio.play()
-
-  }
-
-  seek(value) {
-    this.audio.currentTime = Math.floor(this.audio.duration * (value / 100))
   }
 
   next() {
 
+    this.props.setIndex(this.props.currentIndex + 1)
+
     switch (this.state.playMode) {
       case 2:
-        if (this.state.curSongIndex === this.props.songs.length - 1) {
-          this.setState({curSongIndex: 0})
+        if (this.props.currentIndex === this.props.songs.length - 1) {
+          this.props.setIndex(0)
+          this.audio.src = this.props.songs[0].mp3Url
+
           this.setCurSong()
         } else {
           this.setState(
-              {curSongIndex: this.state.curSongIndex += 1, play: true})
-
+              {play: true})
+          this.audio.src = this.props.songs[this.props.currentIndex + 1].mp3Url
           this.setCurSong()
 
         }
         break;
       case 1:
-        let shuffleIndex = this.getRandomSong()
-        while (shuffleIndex === this.state.curSongIndex) {
+        // avoid one song
+        let shuffleIndex = 0
+        if (this.props.songs.length > 1) {
           shuffleIndex = this.getRandomSong()
+          while (shuffleIndex === this.props.currentIndex) {
+            shuffleIndex = this.getRandomSong()
+          }
         }
-
-        this.setState({curSongIndex: shuffleIndex, play: true})
-
+        this.props.setIndex(shuffleIndex)
+        this.setState({play: true})
+        this.audio.src = this.props.songs[shuffleIndex].mp3Url
         this.setCurSong()
 
         break;
       case 0:
-        if (this.state.curSongIndex === this.props.songs.length - 1) {
-          this.setState({curSongIndex: 0})
+        if (this.props.currentIndex === this.props.songs.length - 1) {
+          this.props.setIndex(0)
+          this.audio.src = this.props.songs[0].mp3Url
+
           this.setCurSong()
         } else {
           this.setState(
-              {curSongIndex: this.state.curSongIndex += 1, play: true})
-
+              {play: true})
+          this.audio.src = this.props.songs[this.props.currentIndex + 1].mp3Url
           this.setCurSong()
 
         }
@@ -294,53 +294,54 @@ class SongPanel extends React.Component {
   }
 
   previous() {
-
     switch (this.state.playMode) {
-      case  2:
-        if (this.state.curSongIndex === 0) {
-          this.setState({
-            cusSongIndex: this.state.curSongIndex -= -this.props.songs.length
-                + 1,
-            play: true
-          })
+
+      case 2:
+        if (this.props.currentIndex == 0) {
+          this.props.setIndex(this.props.songs.length - 1)
+          this.audio.src = this.props.songs[0].mp3Url
           this.setCurSong()
-
         } else {
-          this.setState({
-            curSongIndex: this.state.curSongIndex -= 1,
-            play: true
-          })
-
+          this.setState(
+              {play: true})
+          this.props.setIndex(this.props.currentIndex - 1)
+          this.audio.src = this.props.songs[this.props.currentIndex - 1].mp3Url
           this.setCurSong()
 
         }
         break;
+
       case 1:
-        let shuffleIndex = this.getRandomSong()
-        while (shuffleIndex === this.state.curSongIndex) {
+        // avoid one song
+        let shuffleIndex = 0
+        if (this.props.songs.length > 1) {
           shuffleIndex = this.getRandomSong()
+          while (shuffleIndex === this.props.currentIndex) {
+            shuffleIndex = this.getRandomSong()
+          }
         }
-
-        this.setState({curSongIndex: shuffleIndex, play: true})
-
+        this.props.setIndex(shuffleIndex)
+        this.setState({play: true})
+        this.audio.src = this.props.songs[shuffleIndex].mp3Url
         this.setCurSong()
 
         break;
-      case  0:
-        if (this.state.curSongIndex === 0) {
-          this.setState({
-            cusSongIndex: this.state.curSongIndex -= -this.props.songs.length
-                + 1,
-            play: true
-          })
+      case 0:
+        if (this.props.currentIndex == 0) {
+          this.props.setIndex(this.props.songs.length - 1)
+          try {
+            this.audio.src = this.props.songs[0].mp3Url
+
+          } catch (e) {
+            //Uncaught (in promise) DOMException: The play() request was interrupted by a new load request.
+            //Didn't solve
+          }
           this.setCurSong()
-
         } else {
-          this.setState({
-            curSongIndex: this.state.curSongIndex -= 1,
-            play: true
-          })
-
+          this.setState(
+              {play: true})
+          this.props.setIndex(this.props.currentIndex - 1)
+          this.audio.src = this.props.songs[this.props.currentIndex - 1].mp3Url
           this.setCurSong()
 
         }
@@ -354,162 +355,198 @@ class SongPanel extends React.Component {
     this.audio.volume = this.state.volume / 100
   }
 
+  play() {
+    this.setState({play: true, duration: format(this.audio.duration)})
+    this.audio.play()
+
+  }
+
+  pause() {
+    this.setState({play: false})
+    this.audio.pause()
+  }
+
+  seek(value) {
+    try {
+      this.audio.currentTime = Math.floor(this.audio.duration * (value / 100))
+    } catch (e) {
+      // TypeError: Failed to set the 'currentTime' property on 'HTMLMediaElement': The provided double value is non-finite.
+      // Didn't solve
+    }
+  }
+
   render() {
+
     const {classes} = this.props;
+
     return (
 
         <div className={classes.root}>
 
+          <Paper className={classes.paper} elevation={10}>
 
-          <Card className={classes.card}>
-            <Grid
-                container
-                direction="column"
-                justify="flex-start"
-                alignItems="flex-start"
+            {
+              this.props.songs.length == 0 ?
 
-            >
+                  <Typography variant={"h2"}>No song to play</Typography> :
 
-              <Grid
-                  container
-                  direction="row"
-                  justify="flex-start"
-                  alignItems="flex-start"
-              >
+                  <Grid
+                      container
+                      direction="row"
+                      justify="center"
+                      alignItems="center"
+                  >
 
+                    <Grid item xs={2}>
+                      <Grid
+                          container
+                          direction="column"
+                          justify="center"
+                          alignItems="center"
+                      >
+                        <Grid item xs={12}>
+                          <Typography variant="h6">
+                            {this.props.songs[this.props.currentIndex].name}
+                          </Typography>
 
-                <div className={classes.details}>
+                        </Grid>
+                        <Grid item xs={12}>
+                          <Typography variant="caption" color="textSecondary">
+                            {this.props.songs[this.props.currentIndex].author}
+                          </Typography>
 
+                        </Grid>
+                      </Grid>
+                    </Grid>
+                    <Grid item xs={2}>
+                      <Grid
+                          container
+                          direction="column"
+                          justify="center"
+                          alignItems="center"
+                      >
+                        <Grid item xs={12}>
+                          <Slider value={this.state.pSlider}
+                                  aria-labelledby="continuous-slider"
+                                  className={classes.pSlider}
+                                  onChange={(event, value) => this.seek(
+                                      value)}/>
+                        </Grid>
+                        <Grid item xs={12}>
+                          <Typography>
+                            {this.state.currentTime}/{this.state.duration}
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </Grid>
+                    <Grid item xs={2}>
+                      <IconButton aria-label="previous"
+                                  onClick={() => this.previous()}>
+                        <SkipPreviousIcon className={classes.playIcon}/>
+                      </IconButton>
+                      <IconButton aria-label="play/pause" onClick={() => {
+                        this.state.play ? this.pause()
+                            : this.play()
+                      }}>
+                        {this.state.play ? <PauseIcon
+                                className={classes.playIcon}/> :
+                            <PlayArrowIcon className={classes.playIcon}/>}
+                      </IconButton>
+                      <IconButton aria-label="next"
+                                  onClick={() => this.next()}
+                      >
+                        <SkipNextIcon className={classes.playIcon}
+                        />
+                      </IconButton>
+                    </Grid>
+                    <Grid item xs={2}>
+                      <Checkbox checked={this.state.playMode === 0 ? true
+                          : false} onChange={() => {
+                        this.setState({
+                          playMode: 0
+                        })
+                      }}
+                                icon={<PlaylistPlayIcon
+                                    className={classes.scIcon}/>}
+                                checkedIcon={<PlaylistPlayIcon
+                                    className={classes.scIcon}/>}
+                                value="checkedH"/>
+                      <Checkbox icon={<ShuffleIcon className={classes.scIcon}/>}
+                                checkedIcon={<ShuffleIcon
+                                    className={classes.scIcon}/>}
+                                checked={this.state.playMode === 1 ? true
+                                    : false}
+                                onChange={() => {
+                                  this.setState(
+                                      {
+                                        playMode: 1
+                                      })
+                                }}/>
+                      <Checkbox icon={<LoopIcon className={classes.scIcon}/>}
+                                checkedIcon={<LoopIcon
+                                    className={classes.scIcon}/>}
+                                checked={this.state.playMode === 2 ? true
+                                    : false}
+                                onChange={() => {
+                                  this.setState({
+                                    playMode: 2
+                                  })
+                                }}/>
+                    </Grid>
+                    <Grid item xs={2}>
 
-                  <CardContent className={classes.content}>
-                    <Typography component="h5" variant="h5">
-                      {this.state.name}
-                    </Typography>
-                    <Typography variant="subtitle1" color="textSecondary">
-                      {this.state.author}
-                    </Typography>
+                      <Grid
+                          container
+                          direction="row"
+                          justify="center"
+                          alignItems="center"
+                      >
+                        <Grid item xs={4}>
+                          <IconButton aria-label="next" onClick={() => {
+                            if (this.state.volume !== 0) {
+                              this.setState({volume: 0})
+                              this.audio.volume = 0
+                            } else {
+                              this.setState({volume: 100})
+                              this.audio.volume = 1
+                            }
+                          }}>
+                            {this.state.volume === 0 ? <VolumeOffIcon
+                                className={classes.scIcon}/> : <VolumeDownIcon
+                                className={classes.scIcon}/>}
 
-                    <Grid direction={'row'}>
+                          </IconButton>
+                        </Grid>
 
-                      <Slider value={this.state.pSlider}
+                        <Grid item xs={8}>
+                          <Slider
+
                               aria-labelledby="continuous-slider"
-                              className={classes.pSlider}
-                              onChange={(event, value) => this.seek(value)}/>
-                      <Typography>
-                        {this.state.currentTime}/{this.state.duration}
-                      </Typography>
+                              className={classes.vSlider}
+                              value={this.state.volume}
+                              onChange={(event, value) => this.changeVolume(
+                                  value)}
+                          />
+                        </Grid>
+
+                      </Grid>
+
 
                     </Grid>
-
-                  </CardContent>
-                  <div className={classes.controls}>
-                    <IconButton aria-label="previous"
-                                onClick={() => this.previous()}>
-                      <SkipPreviousIcon className={classes.playIcon}/>
-                    </IconButton>
-                    <IconButton aria-label="play/pause" onClick={() => {
-                      this.state.play ? this.pause()
-                          : this.play()
-                    }}>
-                      {this.state.play ? <PauseIcon
-                              className={classes.playIcon}/> :
-                          <PlayArrowIcon className={classes.playIcon}/>}
-                    </IconButton>
-                    <IconButton aria-label="next" onClick={() => this.next()}>
-                      <SkipNextIcon className={classes.playIcon}
+                    <Grid item xs={2}>
+                      <CardMedia
+                          className={classes.cover}
+                          image={this.props.songs[this.props.currentIndex].imageUrl}
+                          style={{borderRadius: '5%'}}
                       />
-                    </IconButton>
-                  </div>
+                    </Grid>
 
-                </div>
-                <CardMedia
-                    className={classes.cover}
-                    image={this.state.albumPicUrl}
-                />
-
-              </Grid>
+                  </Grid>
+            }
 
 
-              <Grid
-                  container
-                  direction="row"
-                  justify="flex-start"
-                  alignItems="flex-start"
-              >
-                <Grid item xs={9}>
-                  <div className={classes.playSecControlFix}>
-                    <Checkbox checked={this.state.playMode === 0 ? true
-                        : false} onChange={() => {
-                      this.setState({
-                        playMode: 0
-                      })
-                    }}
-                              icon={<PlaylistPlayIcon
-                                  className={classes.scIcon}/>}
-                              checkedIcon={<PlaylistPlayIcon
-                                  className={classes.scIcon}/>}
-                              value="checkedH"/>
-                    <Checkbox icon={<ShuffleIcon className={classes.scIcon}/>}
-                              checkedIcon={<ShuffleIcon
-                                  className={classes.scIcon}/>}
-                              checked={this.state.playMode === 1 ? true : false}
-                              onChange={() => {
-                                this.setState(
-                                    {
-                                      playMode: 1
-                                    })
-                              }}/>
-                    <Checkbox icon={<LoopIcon className={classes.scIcon}/>}
-                              checkedIcon={<LoopIcon
-                                  className={classes.scIcon}/>}
-                              checked={this.state.playMode === 2 ? true : false}
-                              onChange={() => {
-                                this.setState({
-                                  playMode: 2
-                                })
-                              }}/>
-                  </div>
-                </Grid>
+          </Paper>
 
-                <Grid
-                    container
-                    direction="row"
-                    justify="flex-start"
-                    alignItems="center"
-                    xs={3}
-                >
-
-                  <IconButton aria-label="next" onClick={() => {
-                    if (this.state.volume !== 0) {
-                      this.setState({volume: 0})
-                      this.audio.volume = 0
-                    } else {
-                      this.setState({volume: 100})
-                      this.audio.volume = 1
-                    }
-                  }}>
-                    {this.state.volume === 0 ? <VolumeOffIcon
-                        className={classes.scIcon}/> : <VolumeDownIcon
-                        className={classes.scIcon}/>}
-
-                  </IconButton>
-
-                  <Slider
-
-                      aria-labelledby="continuous-slider"
-                      className={classes.vSlider}
-                      value={this.state.volume}
-                      onChange={(event, value) => this.changeVolume(value)}
-                  />
-                </Grid>
-
-
-              </Grid>
-
-
-            </Grid>
-
-          </Card>
 
         </div>
 
@@ -519,5 +556,18 @@ class SongPanel extends React.Component {
 
 }
 
-export default withRouter((withStyles(useStyles)(SongPanel)))
+const mapStateToProps = (reducer) => {
+  return {
+    songs: reducer.state.songs,
+    currentIndex: reducer.state.currentIndex,
+    deletedIndex: reducer.state.deletedIndex
 
+  }
+}
+
+const mapDispatchToProps = (dispatch) => {
+  return bindActionCreators({addSong, setIndex}, dispatch)
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(
+    withRouter((withStyles(useStyles)(SongPanel))))

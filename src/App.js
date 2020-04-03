@@ -8,19 +8,27 @@ import {
   Redirect
 } from 'react-router-dom'
 import MainPage from "./containers/MainPage";
-
+import {Provider} from 'react-redux'
+import {applyMiddleware, createStore} from "redux";
 function App() {
   return (
-      <Router>
+
+        <Router>
 
 
-        <Switch>
-          <Route path={"/"} component={MainPage}></Route>
+          <Switch>
+            <Route path={"/"} component={MainPage}></Route>
 
-        </Switch>
+          </Switch>
 
 
-      </Router>
+        </Router>
+
+
+
+
+
+
   );
 }
 

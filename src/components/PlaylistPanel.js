@@ -1,131 +1,172 @@
-// import React from 'react'
-// import {withRouter} from "react-router";
-// import Paper from '@material-ui/core/Paper';
-// import Grid from '@material-ui/core/Grid';
-// import withStyles from "@material-ui/core/styles/withStyles";
-// import Typography from "@material-ui/core/Typography";
-// import Card from "@material-ui/core/Card";
-// import CardContent from "@material-ui/core/CardContent";
-// import IconButton from "@material-ui/core/IconButton";
-// import CardMedia from "@material-ui/core/CardMedia";
-// import PlayArrowIcon from '@material-ui/icons/PlayArrow';
-// import SkipPreviousIcon from '@material-ui/icons/SkipPrevious';
-// import SkipNextIcon from '@material-ui/icons/SkipNext';
-// import PauseIcon from '@material-ui/icons/Pause';
-// import MusicService from "../services/MusicService";
-// import Slider from "@material-ui/core/Slider";
-// import VolumeDownIcon from '@material-ui/icons/VolumeDown';
-// import PlaylistPlayIcon from '@material-ui/icons/PlaylistPlay';
-// import ShuffleIcon from '@material-ui/icons/Shuffle';
-// import LoopIcon from '@material-ui/icons/Loop';
-// import VolumeOffIcon from '@material-ui/icons/VolumeOff';
-// import FormControlLabel from "@material-ui/core/FormControlLabel";
-//
-// import Checkbox from "@material-ui/core/Checkbox";
-// import Grow from "@material-ui/core/Grow";
-// import Table from "@material-ui/core/Table";
-// import TableHead from "@material-ui/core/TableHead";
-// import TableRow from "@material-ui/core/TableRow";
-// import TableCell from "@material-ui/core/TableCell";
-// import TableBody from "@material-ui/core/TableBody";
-//
-// const service = MusicService.getInstance()
-//
-// const useStyles = theme => ({
-//
-//
-// });
-//
-//
-// class PlaylistPanel extends React.Component {
-//
-//   constructor(props) {
-//
-//     super(props);
-//     this.state = {
-//
-//     }
-//
-//   }
-//
-//   componentDidMount() {
-//   }
-//
-//
-//   render() {
-//     const {classes} = this.props;
-//     return (
-//
-//         <div className={classes.root}>
-//
-//           <Table className={classes.table} aria-label="simple table">
-//             <TableHead className={classes.th}>
-//               <TableRow>
-//                 <TableCell>
-//                   <div className={classes.th}>Name</div>
-//                 </TableCell>
-//
-//                 <TableCell align="right">
-//                   <div className={classes.th}>Playtime</div>
-//                 </TableCell>
-//                 <TableCell align="right">
-//                   <div className={classes.th}>Release Date</div>
-//                 </TableCell>
-//                 <TableCell align="right">
-//                   <div className={classes.th}>Rating</div>
-//                 </TableCell>
-//
-//
-//
-//               </TableRow>
-//             </TableHead>
-//             <TableBody>
-//
-//
-//
-//                       <TableRow key={details[0].id}>
-//                         <TableCell component="th" scope="row">
-//                           <div className={classes.tr}>
-//                             <img src={details[0].al.picUrl}
-//                                  className={classes.img}/>
-//
-//
-//                             <a
-//                             >{details[0].name}</a>
-//
-//                           </div>
-//                         </TableCell>
-//
-//                         <TableCell align="right">
-//                           <div className={classes.tr}>asd</div>
-//                         </TableCell>
-//
-//                         <TableCell align="right">
-//                           <div className={classes.tr}>asd</div>
-//                         </TableCell>
-//                         <TableCell align="right">
-//                           <div className={classes.tr}>asd</div>
-//                         </TableCell>
-//
-//                       </TableRow>
-//
-//
-//
-//
-//
-//             </TableBody>
-//           </Table>
-//         </div>
-//
-//     )
-//
-//   }
-//
-// }
-//
-// export default withRouter((withStyles(useStyles)(PlaylistPanel)))
-//
-//
-//
-//
-//
+import React from 'react'
+import {withRouter} from "react-router";
+import Paper from '@material-ui/core/Paper';
+import Grid from '@material-ui/core/Grid';
+import withStyles from "@material-ui/core/styles/withStyles";
+import Typography from "@material-ui/core/Typography";
+import Card from "@material-ui/core/Card";
+import CardContent from "@material-ui/core/CardContent";
+import IconButton from "@material-ui/core/IconButton";
+import HighlightOffIcon from '@material-ui/icons/HighlightOff';
+import Checkbox from "@material-ui/core/Checkbox";
+import Grow from "@material-ui/core/Grow";
+import Table from "@material-ui/core/Table";
+import TableHead from "@material-ui/core/TableHead";
+import TableRow from "@material-ui/core/TableRow";
+import TableCell from "@material-ui/core/TableCell";
+import TableBody from "@material-ui/core/TableBody";
+import TableContainer from '@material-ui/core/TableContainer';
+import PlayCircleFilledWhiteIcon
+  from '@material-ui/icons/PlayCircleFilledWhite';
+import {connect} from 'react-redux';
+import {useSelector} from 'react-redux'
+import {deleteSong, setIndex} from "../actions/actions";
+import {bindActionCreators} from 'redux'
+
+const useStyles = theme => ({
+  root: {},
+
+  paper: {
+    padding: theme.spacing(2),
+    color: theme.palette.text.secondary,
+  },
+  songTable: {},
+  container: {
+    height: '80vh',
+  },
+
+});
+
+class PlaylistPanel extends React.Component {
+
+  constructor(props) {
+
+    super(props);
+    this.state = {}
+
+  }
+
+  componentDidMount() {
+  }
+
+  render() {
+    const {classes} = this.props;
+
+    return (
+
+        <div className={classes.root}>
+
+          <Paper className={classes.paper} elevation={3}>
+            <TableContainer className={classes.container}>
+              <Table stickyHeader aria-label="sticky table"
+                     className={classes.songTable}>
+                <TableHead>
+                  <TableRow>
+
+                    <TableCell>
+                      <Typography variant={'h5'}>
+                        Playlist
+                      </Typography>
+                    </TableCell>
+
+                    <TableCell>
+                      <Typography variant={'subtitle1'}>
+                        Name
+                      </Typography>
+                    </TableCell>
+
+                    <TableCell>
+                      <Typography variant={'subtitle1'}>
+                        Author
+                      </Typography>
+                    </TableCell>
+
+                    <TableCell>
+
+                    </TableCell>
+
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {this.props.songs.length == 0 ? <Typography variant={"h6"}>No
+                        songs yet, try add some.</Typography>
+                      : this.props.songs.map(
+                          (song, index) => (
+                              <TableRow key={index}>
+
+                                <TableCell component="th" scope="row">
+                                  <IconButton size="small" aria-label="play"
+                                              style={{
+                                                backgroundColor: this.props.currentIndex
+                                                == index
+                                                    ? '#ADD8E6' : 'white'
+                                              }}
+                                              onClick={() => {
+                                                this.props.setIndex(index)
+                                              }}
+                                  >
+                                    <PlayCircleFilledWhiteIcon
+                                        style={{"fontSize": 20}}
+                                        className={classes.playIcon}/>
+                                  </IconButton>
+                                </TableCell>
+                                <TableCell component="th" scope="row">
+                                  {song.name}
+                                </TableCell>
+
+                                <TableCell component="th" scope="row">
+                                  {song.author}
+                                </TableCell>
+
+                                <TableCell component="th" scope="row">
+                                  <IconButton size="small" aria-label="play"
+                                              onClick={() => {
+                                                this.props.deleteSong(index)
+                                              }}
+                                  >
+                                    <HighlightOffIcon
+                                        style={{"fontSize": 20}}
+                                        className={classes.playIcon}/>
+                                  </IconButton>
+                                </TableCell>
+
+                              </TableRow>
+                          ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+          </Paper>
+
+
+        </div>
+
+    )
+
+  }
+
+}
+
+const mapStateToProps = (state) => {
+  return {
+    songs: state.state.songs,
+    currentIndex: state.state.currentIndex,
+    deletedIndex: state.state.deletedIndex
+
+  }
+}
+
+const mapDispatchToProps = (dispatch) => {
+  return bindActionCreators({setIndex, deleteSong}, dispatch)
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(
+    withRouter((withStyles(useStyles)(PlaylistPanel))))
+
+
+
+
+
+
+
+

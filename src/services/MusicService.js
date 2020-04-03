@@ -9,15 +9,26 @@ export default class MusicService {
   }
 
   getASongUrl(id) {
-    return fetch("https://neteasemusicapi.herokuapp.com/song/url?id=" +id)
+    return  fetch("https://neteasemusicapi.herokuapp.com/song/url?id=" +id)
     .then(response => response.json())
 
   }
 
   getASongDetail(id) {
-    return fetch("https://neteasemusicapi.herokuapp.com/song/detail?ids=" +id)
+    return fetch("https://neteasemusicapi.herokuapp.com/song/detail?ids=" + id)
     .then(response => response.json())
   }
+
+  checkSong(id) {
+    return fetch("https://neteasemusicapi.herokuapp.com/check/music?id=" + id)
+    .then(response => response.json())
+  }
+
+  searchSong(text) {
+    return fetch("https://neteasemusicapi.herokuapp.com/search?keywords=" + text)
+    .then(response => response.json())
+  }
+
 
   //////////////////////////////////////////////////////////////////////////////
 

@@ -7,6 +7,9 @@ import SongPanel from "../components/SongPanel";
 import MusicService from "../services/MusicService"
 import PlaylistPanel from "../components/PlaylistPanel";
 import {Typography} from "@material-ui/core";
+import Button from "@material-ui/core/Button";
+
+import SeekSongPanel from "../components/SeekSongPanel";
 
 const service = MusicService.getInstance()
 const useStyles = theme => ({
@@ -18,9 +21,9 @@ const useStyles = theme => ({
     textAlign: 'center',
     color: theme.palette.text.secondary,
   },
-  title:{
-    paddingBottom:'15%',
-    paddingTop:20
+  title: {
+    paddingBottom: '15%',
+    paddingTop: 20
   }
 
 });
@@ -30,11 +33,17 @@ class MainPage extends React.Component {
   constructor(props) {
 
     super(props);
-    this.state = {songs: [30352891,27491508,35476044,1409137437,1386055783, 113115,123456]}
+    this.state = {
+      songs: [1431583891,30352891, 27491508, 35476044, 1409137437, 1386055783, 113115,
+        123456]
+    }
 
   }
 
+
+
   componentDidMount() {
+
 
   }
 
@@ -43,28 +52,30 @@ class MainPage extends React.Component {
     return (
 
         <div className={classes.root}>
-          <Grid
-              container
-              direction="row"
-              justify="center"
-              alignItems="center"
-          >
-<div className={classes.title}></div>          </Grid>
-          <Grid
-              container
-              direction="row"
-              justify="center"
-              alignItems="center"
-          >
-          <Grid xs={12} lg={6}>
-            <SongPanel songs={this.state.songs}/>
+
+
+         <Grid
+             container
+             direction="row"
+             justify="center"
+             alignItems="center"
+         >
+           <Grid item xs={6}>
+             <SeekSongPanel/>
+           </Grid>
+           <Grid item xs={6}>
+             <PlaylistPanel/>
+           </Grid>
+
+
+
+
+
+  <SongPanel songs={this.state.songs}/>
+
 
           </Grid>
 
-          {/*<Grid xs={12} lg={7}>*/}
-          {/*<PlaylistPanel songs={this.state.songs}/>*/}
-          {/*</Grid>*/}
-          </Grid>
 
         </div>
 
