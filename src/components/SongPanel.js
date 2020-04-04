@@ -137,8 +137,6 @@ class SongPanel extends React.Component {
 
     } else if (this.props.currentIndex !== prevProps.currentIndex && this.props.songs.length == prevProps.songs.length) {
       // no song deleted but the currentIndex changed by user
-      console.log(this.props.currentIndex)
-      console.log(this.props.deletedIndex)
       this.setCurAndPlay()
 
 
@@ -170,7 +168,7 @@ class SongPanel extends React.Component {
 
   initializeSong() {
 
-    this.audio = new Audio(this.props.songs[0].mp3Url)
+    this.audio =new Audio( "https://music.163.com/song/media/outer/url?id=" + this.props.songs[0].id + ".mp3")
     this.audio.onloadedmetadata = function () {
       this.setState({
 
