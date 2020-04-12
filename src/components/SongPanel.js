@@ -20,6 +20,8 @@ import Checkbox from "@material-ui/core/Checkbox";
 import {bindActionCreators} from "redux";
 import {addSong, setIndex} from "../actions/actions";
 import {connect} from "react-redux";
+import LinearProgress from "@material-ui/core/LinearProgress";
+import Snackbar from "./Snackbar";
 
 const useStyles = theme => ({
   root: {
@@ -133,21 +135,21 @@ class SongPanel extends React.Component {
         && prevProps.songs.length == 0 && this.props.songs.length == 1) {
       // initializing, only render once
       this.initializeSong()
-      this.setCurAndPlay()
+      this.setState(
+          {play: false})
+      // this.setCurAndPlay()
 
-    } else if (this.props.currentIndex !== prevProps.currentIndex && this.props.songs.length == prevProps.songs.length) {
+    } else if (this.props.currentIndex !== prevProps.currentIndex
+        && this.props.songs.length == prevProps.songs.length) {
       // no song deleted but the currentIndex changed by user
       this.setCurAndPlay()
 
-
-
-    }else if(this.props.songs.length < prevProps.songs.length) {
+    } else if (this.props.songs.length < prevProps.songs.length) {
       // songs length reduced, deleted 1/x song/songs
-     if(prevProps.currentIndex == this.props.deletedIndex) {
-       this.setCurAndPlay()
-     }
-    }
-    else if (this.props.songs.length == 0) {
+      if (prevProps.currentIndex == this.props.deletedIndex) {
+        this.setCurAndPlay()
+      }
+    } else if (this.props.songs.length == 0) {
       this.audio.pause()
     }
 
@@ -168,10 +170,9 @@ class SongPanel extends React.Component {
 
   initializeSong() {
 
-    this.audio =new Audio( "https://music.163.com/song/media/outer/url?id=" + this.props.songs[0].id + ".mp3")
+    this.audio = new Audio(this.props.songs[0].mp3Url)
     this.audio.onloadedmetadata = function () {
       this.setState({
-
         duration: format(this.audio.duration)
       })
 
@@ -395,6 +396,7 @@ class SongPanel extends React.Component {
                       alignItems="center"
                   >
 
+
                     <Grid item xs={2}>
                       <Grid
                           container
@@ -545,6 +547,9 @@ class SongPanel extends React.Component {
 
           </Paper>
 
+          <LinearProgress variant="determinate" value={this.state.pSlider}
+                          style={{height: 3, width: '100%'}}/>
+          {/*<Snackbar></Snackbar>*/}
 
         </div>
 
