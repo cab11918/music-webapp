@@ -18,10 +18,9 @@ import LoopIcon from '@material-ui/icons/Loop';
 import VolumeOffIcon from '@material-ui/icons/VolumeOff';
 import Checkbox from "@material-ui/core/Checkbox";
 import {bindActionCreators} from "redux";
-import {addSong, setIndex} from "../actions/actions";
+import {addSong, setIndex} from "../../actions/actions";
 import {connect} from "react-redux";
 import LinearProgress from "@material-ui/core/LinearProgress";
-import Snackbar from "./Snackbar";
 
 const useStyles = theme => ({
   root: {
@@ -125,7 +124,7 @@ class SongPanel extends React.Component {
       curSongIndex: 0,
       playMode: 0,
       volume: 100,
-      songUrls: []
+      songUrls: [],
     }
 
   }
@@ -549,7 +548,6 @@ class SongPanel extends React.Component {
 
           <LinearProgress variant="determinate" value={this.state.pSlider}
                           style={{height: 3, width: '100%'}}/>
-          {/*<Snackbar></Snackbar>*/}
 
         </div>
 

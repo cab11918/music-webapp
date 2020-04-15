@@ -3,13 +3,15 @@ import {withRouter} from "react-router";
 import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
 import withStyles from "@material-ui/core/styles/withStyles";
-import SongPanel from "../components/SongPanel";
-import MusicService from "../services/MusicService"
-import PlaylistPanel from "../components/PlaylistPanel";
+import MusicService from "../../services/MusicService"
 import {Typography} from "@material-ui/core";
 import Button from "@material-ui/core/Button";
+import BottomBar from "../components/BottomBar";
+import TopSearchBar from "../components/TopSearchBar";
+import SearchView from "./SearchView";
+import PlayingView from "./PlayingView";
+import PlaylistView from "./PlaylistView";
 
-import SeekSongPanel from "../components/SeekSongPanel";
 
 const service = MusicService.getInstance()
 const useStyles = theme => ({
@@ -34,8 +36,7 @@ class MainPage extends React.Component {
 
     super(props);
     this.state = {
-      songs: [1431583891,30352891, 27491508, 35476044, 1409137437, 1386055783, 113115,
-        123456]
+
     }
 
   }
@@ -52,29 +53,10 @@ class MainPage extends React.Component {
     return (
 
         <div className={classes.root}>
-
-
-         <Grid
-             container
-             direction="row"
-             justify="center"
-             alignItems="center"
-         >
-           <Grid item xs={6}>
-             <SeekSongPanel/>
-           </Grid>
-           <Grid item xs={6}>
-             <PlaylistPanel/>
-           </Grid>
-
-
-
-
-
-  <SongPanel songs={this.state.songs}/>
-
-
-          </Grid>
+<SearchView/>
+<PlayingView/>
+<PlaylistView/>
+<BottomBar/>
 
 
         </div>

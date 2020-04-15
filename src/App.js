@@ -7,7 +7,8 @@ import {
   Switch,
   Redirect
 } from 'react-router-dom'
-import MainPage from "./containers/MainPage";
+import MainPageDesktop from "./desktop/containers/MainPage";
+import MainPageMobile from "./mobile/containers/MainPage";
 import {Provider} from 'react-redux'
 import {applyMiddleware, createStore} from "redux";
 function App() {
@@ -17,7 +18,8 @@ function App() {
 
 
           <Switch>
-            <Route path={"/"} component={MainPage}></Route>
+            <Route exact path={"/"} component={ MainPageDesktop}></Route>
+            <Route exact path={"/mobile"} component={ MainPageMobile}></Route>
 
           </Switch>
 

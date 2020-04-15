@@ -1,7 +1,8 @@
 let initialState = {
   songs: [],
   currentIndex: 0,
-  deletedIndex: -1
+  deletedIndex: -1,
+  curMobileView:0
 }
 
 const reducers = (state = initialState, action) => {

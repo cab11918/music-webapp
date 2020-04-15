@@ -20,7 +20,7 @@ import PlayCircleFilledWhiteIcon
   from '@material-ui/icons/PlayCircleFilledWhite';
 import {connect} from 'react-redux';
 import {useSelector} from 'react-redux'
-import {deleteSong, setIndex} from "../actions/actions";
+import {deleteSong, setIndex} from "../../actions/actions";
 import {bindActionCreators} from 'redux'
 
 const useStyles = theme => ({

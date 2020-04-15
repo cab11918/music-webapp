@@ -13,7 +13,7 @@ import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import SkipPreviousIcon from '@material-ui/icons/SkipPrevious';
 import SkipNextIcon from '@material-ui/icons/SkipNext';
 import PauseIcon from '@material-ui/icons/Pause';
-import SERVICE from "../services/MusicService";
+import SERVICE from "../../services/MusicService";
 import Slider from "@material-ui/core/Slider";
 import VolumeDownIcon from '@material-ui/icons/VolumeDown';
 import PlaylistPlayIcon from '@material-ui/icons/PlaylistPlay';
@@ -21,7 +21,7 @@ import ShuffleIcon from '@material-ui/icons/Shuffle';
 import LoopIcon from '@material-ui/icons/Loop';
 import VolumeOffIcon from '@material-ui/icons/VolumeOff';
 import FormControlLabel from "@material-ui/core/FormControlLabel";
-
+import CloseIcon from '@material-ui/icons/Close';
 import Checkbox from "@material-ui/core/Checkbox";
 import Grow from "@material-ui/core/Grow";
 import Table from "@material-ui/core/Table";
@@ -31,10 +31,10 @@ import TableCell from "@material-ui/core/TableCell";
 import TableBody from "@material-ui/core/TableBody";
 import Button from "@material-ui/core/Button";
 import {bindActionCreators} from "redux";
-import {addSong} from "../actions/actions";
+import {addSong} from "../../actions/actions";
 import {connect} from "react-redux";
 import TableContainer from "@material-ui/core/TableContainer";
-import NeteaseLogo from "../others/NetEase_Music_logo.svg";
+import NeteaseLogo from "../../others/NetEase_Music_logo.svg";
 import TextField from "@material-ui/core/TextField";
 import SearchIcon from '@material-ui/icons/Search';
 import InputBase from "@material-ui/core/InputBase";
@@ -44,6 +44,9 @@ import HighlightOffIcon from "@material-ui/icons/HighlightOff";
 import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline';
 import Fade from "@material-ui/core/Fade";
 import Slide from "@material-ui/core/Slide";
+import Snackbar from "@material-ui/core/Snackbar";
+import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
+import SnackbarContent from "@material-ui/core/SnackbarContent";
 
 const useStyles = theme => ({
   root: {},
@@ -53,7 +56,7 @@ const useStyles = theme => ({
   },
   tableContainer: {
     height: '80vh',
-    minWidth:'100%'
+    minWidth: '100%'
 
   },
   search: {
@@ -93,9 +96,7 @@ const useStyles = theme => ({
       width: '20ch',
     },
   },
-  songTable: {
-
-},
+  songTable: {},
   container: {
     height: '50vh',
   },
@@ -113,7 +114,8 @@ class SeekSongPanel extends React.Component {
           songs: []
         }
       },
-      curSearch: ""
+      curSearch: "",
+      addSongAlert: false
     }
     this.handleSearchChange = this.handleSearchChange.bind(this);
 
@@ -132,8 +134,10 @@ class SeekSongPanel extends React.Component {
       mp3Url: "null"
     }
 
-    let firstAPICall = fetch("https://neteasemusicapi.herokuapp.com/song/url?id=" + id);
-    let secondAPICall = fetch("https://neteasemusicapi.herokuapp.com/song/detail?ids=" + id);
+    let firstAPICall = fetch(
+        "https://neteasemusicapi.herokuapp.com/song/url?id=" + id);
+    let secondAPICall = fetch(
+        "https://neteasemusicapi.herokuapp.com/song/detail?ids=" + id);
 
     Promise.all([firstAPICall, secondAPICall])
     .then(values => Promise.all(values.map(value => value.json())))
@@ -175,11 +179,12 @@ class SeekSongPanel extends React.Component {
 
   addSelectedSong(id) {
     SERVICE.getInstance().checkSong(id).then(res => {
-      if(res.success) {
+      if (res.success) {
         this.constructSong(
             id)
+        this.setState({addSongAlert: true})
       } else {
-       alert("No copyright | 没有版权")
+        alert("No copyright | 没有版权")
       }
     })
   }
@@ -229,9 +234,10 @@ class SeekSongPanel extends React.Component {
 
               </Grid>
 
-              <Grid item style={{marginTop:16}}>
+              <Grid item style={{marginTop: 16}}>
 
-                {this.state.curSearch == "" ? <span></span> :             <TableContainer className={classes.container}>
+                {this.state.curSearch == "" ? <span></span> : <TableContainer
+                    className={classes.container}>
                   <Table stickyHeader aria-label="sticky table"
                          className={classes.songTable}>
                     <TableHead>
@@ -254,7 +260,6 @@ class SeekSongPanel extends React.Component {
                         </TableCell>
 
 
-
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -273,7 +278,8 @@ class SeekSongPanel extends React.Component {
                                                     aria-label="play"
 
                                                     onClick={() => {
-                                                      this.addSelectedSong(song.id)
+                                                      this.addSelectedSong(
+                                                          song.id)
                                                     }}
                                         >
                                           <AddCircleOutlineIcon
@@ -302,6 +308,41 @@ class SeekSongPanel extends React.Component {
 
             </Grid>
           </Paper>
+
+          <div>
+            <Snackbar
+                background='red'
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'left',
+                }}
+                open={this.state.addSongAlert}
+                autoHideDuration={1000}
+                onClose={() => this.setState({addSongAlert: false})}
+            >
+
+              <SnackbarContent style={{
+                backgroundColor: 'green',
+              }}
+                               message={<span
+                                   id="client-snackbar">    <React.Fragment>
+                                 <Grid
+                                     container
+                                     direction="row"
+                                     justify="center"
+                                     alignItems="center"
+                                 >
+                    <IconButton size="small" aria-label="close" color="inherit"
+                                onClick={() => this.setState(
+                                    {addSongAlert: false})}>
+                      <CheckCircleOutlineIcon fontSize="small"/>
+                    </IconButton>
+                                   <Typography>Song added</Typography></Grid>
+                  </React.Fragment></span>}
+              />
+
+            </Snackbar>
+          </div>
 
 
         </div>
